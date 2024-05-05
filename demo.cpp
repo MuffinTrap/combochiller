@@ -16,6 +16,8 @@
 #include "cheers_png.h"
 #include "frustrated_png.h"
 #include "actually_png.h"
+
+#include "askMeToStay_ogg.h"
 /*
 #include "mel_tiles_png.h"
 #include "pointer_png.h"
@@ -52,6 +54,11 @@ static const int iCheers = 1;
 static const int iFrustrated = 2;
 static const int iSad = 3;
 static const int iNoFace = 4;
+
+
+// TODO time the sad faces to the
+// silent parts in the music.
+// it is almost there by default!
 
 // Face: amount of lines
 static int lines[] = {
@@ -94,7 +101,7 @@ static std::string greets[] = {
     "But I like this",
     "a e s t h e t i c",
     "I managed to put",
-    "together."
+    "together.",
 
     // No face
     "Greetings to other",
@@ -144,8 +151,8 @@ void Template::Init()
 
     
     blip.LoadSound(blipSelect_wav, blipSelect_wav_size);
-    sampleMusic.LoadFromBuffer(sample3_ogg, sample3_ogg_size);
     */
+    vaporwave.LoadFromBuffer(askMeToStay_ogg, askMeToStay_ogg_size);
     menu = gdl::MenuCreator(&font, 1.5f, 1.2f);
 
     // settime((u64)0); // Setting time to 0 crashes Dolphin!
@@ -160,6 +167,8 @@ void Template::Init()
 
     bigCloudSpeed = 1.0f;
     bigCloudX = sky4.Xsize()/3;
+
+    vaporwave.PlayMusic(false);
 }
 
 void Template::Update()
@@ -285,7 +294,15 @@ void Template::DrawGreets()
 
     // TODO
     // animate face change
-    DrawFace(face);
+    if (face != nullptr)
+    {
+        DrawFace(face);
+    }
+    else
+    {
+        // Draw text differently when 
+        // no face?
+    }
 
     // TODO animate text
     // Draw letters closer together
@@ -338,7 +355,7 @@ void Template::DrawRibbons()
     float depth = 1.0f;
     float speed = 1.0f;
     float amplitude = 20.0f;
-    u_int shades[] = {9, 8, 15, 3}
+    u_int shades[] = {9, 8, 15, 3};
 }
 
 void Template::DrawTimingInfo(int x, int y, float scale)
@@ -366,6 +383,8 @@ void Template::DrawTimingInfo(int x, int y, float scale)
     */
 }
 
+
+// Use this for timing maybe?
 /*
 void Template::DrawMenu(int x, int y, int w)
 {
