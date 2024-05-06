@@ -17,7 +17,7 @@ class Template
     gdl::FFont font;
     gdl::Music vaporwave;
     gdl::Sound vhsPlaySound;
-    gdl::MenuCreator menu;
+    // gdl::MenuCreator menu;
 
     public:
         Template();
@@ -35,6 +35,7 @@ class Template
         void DrawGreets();
         void DrawFace(gdl::Image* face, float rotation);
         void DrawClouds();
+        void UpdateTiming();
 
         void DrawRibbons();
 

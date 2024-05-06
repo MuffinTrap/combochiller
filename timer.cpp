@@ -50,7 +50,8 @@ std::string Timer::GetLine()
     }
     else
     {
-        return greets[amount-1];
+        gdl_assert(false, "No more lines left");
+        return "";
     }
 }
 

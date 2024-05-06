@@ -21,13 +21,13 @@ int main()
         temp.Init();
 
         gdl::ConsoleMode();
+        //Uncomment to see console messages
+        //before game starts
         /*
-        Uncomment to see console messages
-        before game starts
         while(1)
         {
             gdl::WiiInput::StartFrame();
-            if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_HOME)){
+            if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_A)){
                 break;
             }
             VIDEO_WaitVSync();
