@@ -1,4 +1,5 @@
 #include "demo.h"
+#include "timer.h"
 
 #include <wiiuse/wpad.h>
 #include "mgdl-input-wii.h"
@@ -34,15 +35,17 @@ static float skyScale = 2.0f;
 static float faceScale = 0.5f;
 static float cloudWidth;
 
-static float timer = 0.0f;
-static float textSpeed = 5.0f;
+
+static int partIndex = 0;
 static bool showGreets = true;
 
-static int greetsIndex = 0;
-static int greetsGoal = 0;
-static int greetsDone = 0;
-static int lineIndex = 0;
-static float letterIndex = 0;
+static bool drawFadeRectangle = true;
+static int fadeAlpha = 255;
+
+static float demoDuration = 120.0f;
+static float elapsed = 0.0f;
+static float fadeOutDuration = 3.0f;
+static float fadeInDuration = 3.0f;
 
 // Actually : 0
 // Cheers : 1
@@ -55,70 +58,87 @@ static const int iFrustrated = 2;
 static const int iSad = 3;
 static const int iNoFace = 4;
 
+// Add lovely face?! Hearts!
+
 
 // TODO time the sad faces to the
 // silent parts in the music.
 // it is almost there by default!
 
-// Face: amount of lines
-static int lines[] = {
-    iCheers,7,
-    iSad,3,
-    iActually, 4,
-    iFrustrated, 3,
-    iCheers, 4,
-    iNoFace, 6,
-    iCheers, 2
-};
+static std::string noLines[] = {""};
 
-static std::string greets[] = {
-    // Cheers
+static std::string hiya[] = {
     "Hiya, Muffintrap here!",
     "Cheers and greetings",
     "to everyone at Outline!",
+
     "I have been working",
     "on a Wii library,",
     "and wanted to do a",
-    "little demo with it.",
+    "little demo with it."};
 
-    // Sad
+static std::string quirky[] = {
     "The Wii can be a bit ",
     "quirky and I personally",
-    "don't enjoy writing C++.",
+    "don't enjoy writing C++."
+};
 
-    // Actually
+static std::string modern[] = {
     "But I really like having",
     "a semi-modern, hardware",
     "platform to work with.",
-    "Also, no shaders!",
+    "Also, no shaders!" }; 
 
-    // Frustrated
+static std::string art[] = {
     "Sorry I did not have",
     "time to make the art",
-    "and music myself.",
+    "and music myself." };
 
-    // Cheers
+static std::string together[] = {
     "But I like this",
     "a e s t h e t i c",
     "I managed to put",
-    "together.",
+    "together."};
 
-    // No face
+static std::string names[] = {
     "Greetings to other",
     "Nintendo sceners:",
     "Vurpo - Halcy",
     "RaccoonViolet",
     "Mrs Beanbag",
-    "Aldroid & ToBach!",
+    "Aldroid & ToBach!"};
 
-    // Cheers
+static std::string party[] = {
     "I hope you all",
-    "have a great party!"
-};
+    "have a great party!" };
 
+static Timer parts[] =
+{
+    Timer(noLines, 1, 5.0f, iNoFace),
+    Timer(hiya,7, 23.49f, iCheers),
+
+    Timer(quirky,3, 6.0f, iSad),
+
+    Timer(modern,4, 23.75f, iActually),
+
+    // Frutrated
+    Timer(art, 3, 11.7f, iFrustrated),
+
+// These ae all together in a 46.second part
+    Timer(together, 4, 17.0f, iCheers),
+
+    Timer(names, 6, 23.0f, iNoFace),
+
+    Timer(party, 2,  6.0f, iCheers)
+};
 Template::Template()
 {
 
+}
+
+float Template::GetProgress()
+{
+    return elapsed/demoDuration;
 }
 
 void Template::Init()
@@ -134,10 +154,11 @@ void Template::Init()
     sad.LoadImageBuffer(sad_png, sad_png_size, gdl::Linear, gdl::RGBA8);
     frustrated.LoadImageBuffer(frustrated_png, frustrated_png_size, gdl::Linear, gdl::RGBA8);
     actually.LoadImageBuffer(actually_png, actually_png_size, gdl::Linear, gdl::RGBA8);
+    printf("faces loaded\n");
 
     // TODO combine these to one call
     fontImage.LoadImageBuffer(m6x11_png, m6x11_png_size, gdl::Nearest, gdl::RGBA8);
-    font.BindSheet(fontImage, 28, 32, ' ');
+    font.BindSheet(fontImage, 22, 32, ' ');
     /*
     mel_image.LoadImageBuffer(mel_tiles_png, mel_tiles_png_size, gdl::Nearest, gdl::RGBA8);
     short spritesPerRow = 2;
@@ -152,13 +173,17 @@ void Template::Init()
     
     blip.LoadSound(blipSelect_wav, blipSelect_wav_size);
     */
+    printf("Load music\n");
     vaporwave.LoadFromBuffer(askMeToStay_ogg, askMeToStay_ogg_size);
+    printf("Music loaded\n");
     menu = gdl::MenuCreator(&font, 1.5f, 1.2f);
+    printf("Menu created\n");
 
     // settime((u64)0); // Setting time to 0 crashes Dolphin!
     deltaTimeStart = gettime();
     programStart = deltaTimeStart;
     deltaTime = 0.0f;
+    printf("Time set\n");
 
     // 
     cloudX = 0.0f;
@@ -169,6 +194,7 @@ void Template::Init()
     bigCloudX = sky4.Xsize()/3;
 
     vaporwave.PlayMusic(false);
+    printf("Demo init done\n");
 }
 
 void Template::Update()
@@ -179,12 +205,56 @@ void Template::Update()
         cloudX += cloudWidth;
     }
     bigCloudX -= bigCloudSpeed * deltaTime;
+
+    parts[partIndex].Update(deltaTime);
+
+    drawFadeRectangle = false;
+    // Do also fade inout from black?
+    if (elapsed <= fadeInDuration)
+    {
+        float fade = elapsed/fadeInDuration;
+        gdl::SetMusicVolume(fade * 100);
+        drawFadeRectangle = true;
+        fadeAlpha = 255 * (1.0f- fade);
+    }
+    else
+    {
+        float timeLeft = demoDuration - elapsed ;
+        if ( timeLeft <= fadeOutDuration)
+        {
+            float fade = timeLeft/fadeOutDuration;
+            gdl::SetMusicVolume(fade * 100);
+            drawFadeRectangle = true;
+            fadeAlpha = 255 * (fade-1.0f);
+        }
+    }
 }
 
-void DrawTextDouble(const char* text, short x, short y, float scale, gdl::FFont* font)
+void DrawTextDouble(const char* text, short x, short y, float scale, gdl::FFont* font, 
+int amount, int lastLetter, float lastLetterProgress)
 {
-    font->DrawText(text, x-font->GetWidth(text)*scale/2+4, y+4, scale, gdl::Color::Black);
-    font->DrawText(text, x-font->GetWidth(text)*scale/2, y, scale, gdl::Color::White);
+    int wordWidth = font->GetWidth(text) * scale;
+    int w = wordWidth/amount;
+    char xx[2];
+    int startX = x-wordWidth/2;
+    int dx;
+    int dy;
+    for (int i = 0; i <= lastLetter; i++)
+    {
+        dx = startX + i * w;
+        dy = y;
+        if (i == lastLetter)
+        {
+            // Center the letter that is growing bigger
+            // Add to halfway and go back
+            dx += (font->GetWidth() * scale*0.5f) - (font->GetWidth()*scale*lastLetterProgress*0.5f);
+            dy += (font->GetHeight()* scale *0.5f) - (font->GetWidth()*scale*lastLetterProgress*0.5f);
+            scale *= lastLetterProgress;
+        }
+        sprintf(xx, "%c", text[i]);
+        font->DrawText(xx, dx + 4, dy + 4, scale, palette[0]);
+        font->DrawText(xx, dx, dy, scale, palette[1]);
+    }
 }
 
 void Template::Draw()
@@ -238,7 +308,7 @@ void Template::Draw()
 
 
     // ? Animate this?
-    DrawTextDouble("Chill out", gdl::ScreenCenterX, font.GetHeight()*1, fontScale, &font);
+    // DrawTextDouble("Chill out", gdl::ScreenCenterX, font.GetHeight()*1, fontScale, &font, 
 
 
 
@@ -250,6 +320,12 @@ void Template::Draw()
 
     // Cute animals?
     // DrawSprites();
+
+    if (drawFadeRectangle)
+    {
+        u_int black = palette[0] - 255 + fadeAlpha;
+        gdl::DrawBoxF(0, 0, gdl::ScreenXres, gdl::ScreenYres, black);
+    }
 }
 
 void Template::DrawFace(gdl::Image* face)
@@ -273,10 +349,9 @@ void Template::DrawFace(gdl::Image* face)
 
 void Template::DrawGreets()
 {
-    int faceIndex = lines[lineIndex];
-    greetsGoal = lines[lineIndex+1];
+    Timer& part = parts[partIndex];
     gdl::Image* face = nullptr;
-    switch(faceIndex)
+    switch(part.faceIndex)
     {
         case iSad:
         face = &sad;
@@ -306,25 +381,18 @@ void Template::DrawGreets()
 
     // TODO animate text
     // Draw letters closer together
-    DrawTextDouble(greets[greetsDone + greetsIndex].c_str(), 
+    std::string line = part.GetLine();
+    DrawTextDouble(line.c_str(), 
     gdl::ScreenCenterX, gdl::ScreenCenterY+face->Ysize()*faceScale/2,
-    1.0f, &font);
+    1.0f, &font, 
+    line.length(), std::floor(part.letterIndex), part.GetLetterProgress());
 
     // Timing
-    int letters = greets[greetsDone + greetsIndex].length();
-    letterIndex += textSpeed * deltaTime;
-    if (letterIndex > letters)
+    if (part.GetProgress()>= 1.0f)
     {
-        letterIndex = 0.0f;
-        greetsIndex += 1;
-        if (greetsIndex == greetsGoal)
-        {
-            greetsDone += greetsGoal;
-            greetsIndex = 0;
-            lineIndex += 2;
-        }
+        partIndex += 1;
     }
-    if (lineIndex >= sizeof(lines))
+    if (partIndex >= sizeof(parts))
     {
         showGreets = false;
     }
@@ -361,15 +429,17 @@ void Template::DrawRibbons()
 void Template::DrawTimingInfo(int x, int y, float scale)
 {
     u64 now = gettime();
-    // float temp=ticks_to_millisecs(now - programStart);
+    elapsed = (double)(now - programStart) / (double)(TB_TIMER_CLOCK * 1000); // division is to convert from ticks to seconds
     deltaTime = (double)(now - deltaTimeStart) / (double)(TB_TIMER_CLOCK * 1000); // division is to convert from ticks to seconds
     deltaTimeStart = now;
     float ystep = font.GetHeight()*scale;
-    font.Printf(x+4, y + ystep * 0+4, scale, gdl::Color::Black, "Deltatime %f", deltaTime);
-    font.Printf(x, y + ystep * 0, scale, gdl::Color::LightRed, "Deltatime %f", deltaTime);
+    font.Printf(x, y + ystep * 0, scale, palette[1], "Deltatime %f", deltaTime);
+    font.Printf(x, y + ystep * 1, scale, palette[1], "Elapsed %f", elapsed);
 
-    font.Printf(x+4, y + ystep * 1+4, scale, gdl::Color::Black, "LetterIndex %2.1f", letterIndex);
-    font.Printf(x, y + ystep * 1, scale, gdl::Color::LightRed, "LetterIndex %2.1f", letterIndex);
+    if (partIndex < sizeof(parts))
+    {
+        font.Printf(x, y + ystep * 2, scale, palette[4], "progress %2.1f", parts[partIndex].GetProgress());
+    }
     /*
 
     ibmFont.Printf(x+4, y + ystep * 1+4, scale, gdl::Color::Black, "Normalized Deltatime: %f", gdl::Delta);

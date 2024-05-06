@@ -46,6 +46,11 @@ int main()
             gdl::PrepDisplay();
             temp.Draw();
             gdl::Display();
+
+            if (temp.GetProgress() > 1.0f)
+            {
+                break;
+            }
         }
     }
     gdl::wii::Exit();

@@ -25,6 +25,8 @@ class Template
         void Update();
         void Draw();
 
+        float GetProgress();
+
     private:
         void DrawMenu(int x, int y, int width);
         void DrawInputInfo(int x, int y);
