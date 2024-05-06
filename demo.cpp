@@ -1,5 +1,6 @@
 #include "demo.h"
 #include "timer.h"
+#include "fx.h"
 
 #include <wiiuse/wpad.h>
 #include "mgdl-input-wii.h"
@@ -61,6 +62,9 @@ static const int iNoFace = 4;
 // Add lovely face?! Hearts!
 
 
+FX partFx;
+
+
 // TODO time the sad faces to the
 // silent parts in the music.
 // it is almost there by default!
@@ -112,24 +116,26 @@ static std::string party[] = {
     "I hope you all",
     "have a great party!" };
 
+float fullRotation = PI*2.0f;
 static Timer parts[] =
 {
     Timer(noLines, 1, 5.0f, iNoFace),
-    Timer(hiya,7, 23.49f, iCheers),
+    Timer(hiya,7, 23.49f, iCheers, 0.5f, fullRotation*3),
 
-    Timer(quirky,3, 6.0f, iSad),
+    // how to get rotation to start from PI
+    Timer(quirky,3, 6.0f, iSad, 1.0f, PI),
 
-    Timer(modern,4, 23.75f, iActually),
+    Timer(modern,4, 23.75f, iActually, 0.5f, fullRotation),
 
     // Frutrated
-    Timer(art, 3, 11.7f, iFrustrated),
+    Timer(art, 3, 11.7f, iFrustrated, 1.5f, PI),
 
 // These ae all together in a 46.second part
-    Timer(together, 4, 17.0f, iCheers),
+    Timer(together, 4, 17.0f, iCheers, 1.0f, PI),
 
     Timer(names, 6, 23.0f, iNoFace),
 
-    Timer(party, 2,  6.0f, iCheers)
+    Timer(party, 2,  6.0f, iCheers, 0.7f, fullRotation)
 };
 Template::Template()
 {
@@ -190,6 +196,9 @@ void Template::Init()
     cloudSpeed = 13.0f;
     cloudWidth = sky3.Xsize() * skyScale;
 
+    farCloudX = 12.0f;
+    farCloudSpeed = 0.5f;
+
     bigCloudSpeed = 1.0f;
     bigCloudX = sky4.Xsize()/3;
 
@@ -204,6 +213,13 @@ void Template::Update()
     {
         cloudX += cloudWidth;
     }
+
+    farCloudX -= farCloudSpeed*deltaTime;
+    if (farCloudX <= -cloudWidth)
+    {
+        farCloudX += cloudWidth;
+    }
+
     bigCloudX -= bigCloudSpeed * deltaTime;
 
     parts[partIndex].Update(deltaTime);
@@ -260,46 +276,32 @@ int amount, int lastLetter, float lastLetterProgress)
 void Template::Draw()
 {
     // Draw Sky and parallax clouds
+    DrawClouds();
 
-    // Sky background
-    sky1.Put(
-            gdl::ScreenCenterX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
-    sky2.Put(
-            gdl::ScreenCenterX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
+    // Draw part's effect
+    partFx = parts[partIndex].effect;
+    switch(partFx)
+    {
+        case FXparticles:
+        break;
 
-    // Big cloud
-    sky4.Put(
-            gdl::ScreenCenterX+bigCloudX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
+        case FXfire:
+        break;
 
-    // Clouds
-    sky3.Put(
-            gdl::ScreenCenterX+cloudX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
+        case FXvoxelcube:
+        break;
 
-    float nextCloud = gdl::ScreenCenterX+cloudX + cloudWidth;
+        case FXtunnel:
+        break;
 
-    sky3.Put(nextCloud,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
+        case FXplasma:
+        break;
 
-    float fontScale = 2.0f;
+        case FXbirds:
+        break;
+    };
+
+
 
     if (showGreets)
     {
@@ -308,6 +310,7 @@ void Template::Draw()
 
 
     // ? Animate this?
+    float fontScale = 2.0f;
     // DrawTextDouble("Chill out", gdl::ScreenCenterX, font.GetHeight()*1, fontScale, &font, 
 
 
@@ -328,23 +331,37 @@ void Template::Draw()
     }
 }
 
-void Template::DrawFace(gdl::Image* face)
+// Rotation of 0 means that the full face is showing
+// Over 90 means backside is showing
+void Template::DrawFace(gdl::Image* face, float rotation)
 {
+    while (rotation >= PI*2)
+    {
+        rotation -= PI*2;
+    }
     // TODO: Animate faces talking?
     // Frame for face
     float w = face->Xsize();
     float h = face->Ysize();
-    float frameLeft = gdl::ScreenCenterX- w * faceScale/2;
-    float frameTop = gdl::ScreenCenterY - h * faceScale/2;
-    gdl::DrawBoxFG(frameLeft, frameTop, frameLeft + w*faceScale, frameTop+h*faceScale, palette[3], palette[3], palette[11], palette[11]); 
-    gdl::DrawBox(frameLeft-1, frameTop-1, frameLeft + w*faceScale+1, frameTop+h*faceScale+1, palette[8]); 
+    float cx = gdl::ScreenCenterX; 
+    float cy = gdl::ScreenCenterY; 
+
+    float rotationMulti = cos(rotation);
+    float frameLeft = cx - w * faceScale/2 * rotationMulti;
+    float frameRight = cx + w*faceScale/2 * rotationMulti;
+
+    float frameTop = cy - h * faceScale/2;
+    float frameBottom = cy + h*faceScale/2;
+
+    gdl::DrawBoxFG(frameLeft, frameTop, frameRight , frameBottom, palette[3], palette[3], palette[11], palette[11]); 
+    gdl::DrawBox(frameLeft-1, frameTop-1, frameRight+1, frameBottom+1, palette[8]); 
 
     // Different places for faces?
-    face->Put(gdl::ScreenCenterX, gdl::ScreenCenterY, 
-        gdl::Color::White, 
-        gdl::Centered, gdl::Centered, 
-        faceScale, 0.0f);
-
+    if (rotation >= -PI/2 && rotation <= PI/2)
+    {
+        face->PutS(frameLeft, frameTop, frameRight, frameBottom,
+            gdl::Color::White);
+    }
 }
 
 void Template::DrawGreets()
@@ -369,9 +386,10 @@ void Template::DrawGreets()
 
     // TODO
     // animate face change
+    float rotation = part.GetFaceRotation(); 
     if (face != nullptr)
     {
-        DrawFace(face);
+        DrawFace(face, rotation);
     }
     else
     {
@@ -379,8 +397,6 @@ void Template::DrawGreets()
         // no face?
     }
 
-    // TODO animate text
-    // Draw letters closer together
     std::string line = part.GetLine();
     DrawTextDouble(line.c_str(), 
     gdl::ScreenCenterX, gdl::ScreenCenterY+face->Ysize()*faceScale/2,
@@ -418,12 +434,14 @@ void Template::DrawSprites()
 // use the twister formula/code
 void Template::DrawRibbons()
 {
+    /*
     float ease_duration = 60.0f;
     float width = 20.0f;
     float depth = 1.0f;
     float speed = 1.0f;
     float amplitude = 20.0f;
     u_int shades[] = {9, 8, 15, 3};
+    */
 }
 
 void Template::DrawTimingInfo(int x, int y, float scale)
@@ -453,6 +471,64 @@ void Template::DrawTimingInfo(int x, int y, float scale)
     */
 }
 
+void Template::DrawClouds()
+{
+    // Sky background
+    sky1.Put(
+            gdl::ScreenCenterX,
+            gdl::ScreenCenterY,
+            gdl::Color::White, 
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+    sky2.Put(
+            gdl::ScreenCenterX,
+            gdl::ScreenCenterY,
+            gdl::Color::White, 
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+    // Far Clouds
+    sky3.Put(
+            gdl::ScreenCenterX+farCloudX,
+            gdl::ScreenCenterY,
+            palette[3],
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+    float nextCloud = gdl::ScreenCenterX+farCloudX + cloudWidth;
+
+    sky3.Put(nextCloud,
+            gdl::ScreenCenterY,
+            palette[3],
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+
+    // Big cloud
+    sky4.Put(
+            gdl::ScreenCenterX+bigCloudX,
+            gdl::ScreenCenterY,
+            gdl::Color::White, 
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+    // Near Clouds
+    sky3.Put(
+            gdl::ScreenCenterX+cloudX,
+            gdl::ScreenCenterY,
+            gdl::Color::White, 
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+    nextCloud = gdl::ScreenCenterX+cloudX + cloudWidth;
+
+    sky3.Put(nextCloud,
+            gdl::ScreenCenterY,
+            gdl::Color::White, 
+            gdl::Centered, gdl::Centered, 
+           skyScale, 0.0f);
+
+}
 
 // Use this for timing maybe?
 /*

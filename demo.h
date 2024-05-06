@@ -33,13 +33,19 @@ class Template
         void DrawTimingInfo(int x, int y, float scale);
         void DrawSprites();
         void DrawGreets();
-        void DrawFace(gdl::Image* face);
+        void DrawFace(gdl::Image* face, float rotation);
+        void DrawClouds();
 
         void DrawRibbons();
 
-        float cloudSpeed;
-        float bigCloudSpeed;
         float bigCloudX;
+        float bigCloudSpeed;
+
         float cloudX;
+        float cloudSpeed;
+
+        float farCloudX;
+        float farCloudSpeed;
+
         double deltaTime;
 };

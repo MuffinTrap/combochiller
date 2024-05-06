@@ -33,7 +33,7 @@ INCLUDES	:=	include
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-CFLAGS	= -O3 -Wall -DPLATFORM_WII $(MACHDEP) $(INCLUDE)
+CFLAGS	= -O1 -Wall -DPLATFORM_WII $(MACHDEP) $(INCLUDE)
 CXXFLAGS	= -Wwrite-strings $(CFLAGS)
 
 LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -123,6 +123,9 @@ clean:
 #---------------------------------------------------------------------------------
 run:
 	wiiload $(OUTPUT).dol
+
+emulate:
+	Dolphin $(OUTPUT).dol
 
 #---------------------------------------------------------------------------------
 else
