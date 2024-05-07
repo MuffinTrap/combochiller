@@ -5,16 +5,21 @@ typedef struct Vector2
 {
 	float x;
 	float y;
+
+    Vector2();
+    Vector2(float x, float y);
 } Vector2;
 
 enum FX
 {
+    FXnone,
     FXparticles,
     FXfire,
     FXplasma,
     FXvoxelcube,
     FXtunnel,
-    FXbirds
+    FXbirds,
+    FXfruits
 };
 struct Flake {
 	Vector2 pos;

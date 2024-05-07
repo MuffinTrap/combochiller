@@ -1,6 +1,9 @@
 #pragma once
 
 #include <mgdl-wii.h>
+#include "fx.h"
+
+class Timer;
 
 class Template
 {
@@ -8,6 +11,9 @@ class Template
     gdl::Image cheers;
     gdl::Image frustrated;
     gdl::Image actually;
+    gdl::Image heart;
+    gdl::Image fruits;
+    gdl::SpriteSet fruitSprites;
     gdl::SpriteSet muffin_sprites;
     gdl::Image fontImage;
     gdl::Image sky1;
@@ -33,9 +39,12 @@ class Template
         void DrawTimingInfo(int x, int y, float scale);
         void DrawSprites();
         void DrawGreets();
-        void DrawFace(gdl::Image* face, float rotation);
+        void DrawFace(gdl::Image* face, float rotation, Vector2 target);
         void DrawClouds();
         void UpdateTiming();
+
+        void DrawLinesNoFX(Timer& part);
+        void DrawLinesFruit(Timer& part);
 
         void DrawRibbons();
 

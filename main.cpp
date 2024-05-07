@@ -38,20 +38,21 @@ int main()
             gdl::WiiInput::StartFrame();
 
             if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_HOME)){
-                break;
+                gdl::wii::Exit();
             }
 
             temp.Update();
 
             gdl::PrepDisplay();
-            temp.Draw();
+            if (temp.GetProgress() <= 1.0f)
+            {
+                temp.Draw();
+            }
+            else {
+                gdl::wii::Exit();
+            }
             gdl::Display();
 
-            if (temp.GetProgress() > 1.0f)
-            {
-                break;
-            }
         }
     }
-    gdl::wii::Exit();
 }
