@@ -1,6 +1,11 @@
 #include "fx.h"
 #include "pastelpalette.h"
+
+#include <cstdlib>
+
 #include <mgdl-wii.h>
+#include <gccore.h>
+
 Vector2::Vector2()
 {
     this->x = 0.0f;
@@ -13,48 +18,49 @@ Vector2::Vector2(float x, float y)
     this->y = y;
 }
 void Particles::Init() {
-        // Snow flakes
-        for (int i = 0; i < 100; i++)
-        {
-            float x = rand() % gdl::ScreenXres;
-            float y = rand() % gdl::ScreenYres;
-			Flake a;
-			a.pos.x = x;
-			a.pos.y = y;
-			a.color = palette[i%16];
-            flakes[i] = a;
-        }
-    }
-
-static void DrawPoints(Flake pointsArray[], int amount, short size)
-{
-    if (size <= 1)
+    // Snow flakes
+    for (int i = 0; i < ParticleAmount; i++)
     {
-        size = 1;
+        Flake a;
+        // Create under the screen
+        a.pos = Vector2(0,gdl::ScreenYres + 10);
+        a.velocity = Vector2(0,0);
+        a.color = 8 + (rand()% 32);
+        flakes[i] = a;
     }
+    time = 0.0f;
+    spawnIndex = 0;
+    spawnSpeed = 160.0f;
+    gravity = 8.0f;
+    aliveTime = 1.0f;
+}
 
-    short x;
-    short y;
-
+static void DrawPoints(Flake pointsArray[])
+{
+	GX_ClearVtxDesc();
     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
     GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
     GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
-    GX_Begin(GX_QUADS, GX_VTXFMT0, amount * 4);
+    GX_Begin(GX_QUADS, GX_VTXFMT0, ParticleAmount * 4);
 
-    for (int i = 0; i < amount; i++)
+    short x;
+    short y;
+    for (int i = 0; i < ParticleAmount; i++)
     {
-        struct Vector2 p = pointsArray[i].pos;
+        Vector2 p = pointsArray[i].pos;
         x = (short)p.x;
         y = (short)p.y;
-        uint col = pointsArray[i].color;
+        uint col = palette[1+pointsArray[i].color%15];// No black particles
+        short size = pointsArray[i].color;
 
+    // Draw a diamond
         GX_Position2s16(x, y);
         GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
-        GX_Position2s16(x + size, y);
-        GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
-        GX_Position2s16(x + size, y + size);
+        GX_Position2s16(x + size/2, y + size/2);
         GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
         GX_Position2s16(x, y + size);
+        GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
+        GX_Position2s16(x-size/2 , y + size/2);
         GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
     }
 
@@ -63,21 +69,40 @@ static void DrawPoints(Flake pointsArray[], int amount, short size)
 
 
 void Particles::Update(float deltaTime) {
-    time += deltaTime * 0.01f;
+    time += deltaTime;
 
-    for (int i = 0; i < 100; i++)
+    int amountNow = std::floor(spawnIndex);
+    int createAmount = std::floor(time*spawnSpeed - spawnIndex);
+    if (createAmount > 0)
     {
-        flakes[i].pos.x += 1.1f + sin(time) * 2.0f;
-        flakes[i].pos.y += 1 * gdl::Delta;
-        if (flakes[i].pos.x > gdl::ScreenXres) {
-            flakes[i].pos.x = 0.0f;
-        }
-        if (flakes[i].pos.y > gdl::ScreenYres) {
-            flakes[i].pos.y = 0.0f;
+        spawnIndex = time * spawnSpeed;
+        if (amountNow + createAmount < ParticleAmount)
+        {
+            for(int i = amountNow; i < amountNow + createAmount; i++)
+            {
+                flakes[i].pos = spawnPoint;
+                float dx = (rand()%200-100)/100.0f;
+                float dy = -0.1f + (rand()%100)/-100.0f;
+                flakes[i].velocity = Vector2(dx * 4.0f, dy * 5.0f);
+            }
         }
     }
 
-    DrawPoints(flakes, 100, 4);
+    for (int i = 0; i < ParticleAmount; i++)
+    {
+        flakes[i].velocity.y += gravity * deltaTime; 
+
+        flakes[i].pos.x += flakes[i].velocity.x;
+        flakes[i].pos.y += flakes[i].velocity.y;
+    }
+}
+
+void Particles::Draw()
+{
+    if (time < aliveTime)
+    {
+        DrawPoints(flakes);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

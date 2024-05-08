@@ -72,6 +72,8 @@ static const int iHeart = 5;
 
 #include "parts.h"
 
+static Particles particleEffect = Particles();
+
 
 Template::Template()
 {
@@ -149,6 +151,10 @@ void Template::Init()
     defaultTextPosition = Vector2(gdl::ScreenCenterX, font.GetHeight() + cheers.Ysize()*faceScale);
 
 
+    // Init effects
+    particleEffect.Init();
+    particleEffect.aliveTime = GetPart(partHiya).duration/2.0f;
+
     vaporwave.PlayMusic(false);
 }
 
@@ -199,6 +205,18 @@ void Template::Update()
             SetPart(partIndex + 1);
         }
     }
+    switch(part.effect)
+    {
+        case FXparticles:
+            particleEffect.spawnPoint = Vector2(faceposition.x, faceposition.y - cheers.Ysize());
+            particleEffect.Update(deltaTime);
+        break;
+        default:
+        break;
+    }
+
+    // SKIP PARTS
+
     if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_PLUS))
     {
         SetPart(partIndex + 1);
@@ -214,6 +232,8 @@ void Template::Update()
         elapsed -= (part.duration - part.elapsed);
         vaporwave.JumpToSeconds(elapsed);
     }
+
+    // FADE
 
     drawFadeRectangle = false;
     // Do also fade inout from black?
@@ -254,6 +274,7 @@ void Template::Draw()
     switch(partFx)
     {
         case FXparticles:
+        particleEffect.Draw();
         break;
 
         case FXfire:
@@ -494,16 +515,14 @@ void Template::DrawGreets()
     }
     switch(part.effect)
     {
-        case FXnone:
-        DrawLinesNoFX(part);
-        break;
-
-        case FXglitch:
-        DrawLinesNoFX(part);
-        break;
-
         case FXfruits:
-        DrawLinesFruit(part);
+            DrawLinesFruit(part);
+        break;
+
+        case FXnone:
+        case FXglitch:
+        default:
+            DrawLinesNoFX(part);
         break;
     };
 
@@ -567,9 +586,9 @@ void Template::DrawClouds(FX effect)
     if (effect == FXglitch)
     {
         gdl::DrawBoxF(0, 0, gdl::ScreenXres, gdl::ScreenYres, gdl::Color::Blue);
-        int y = 10;
+        int y = 16;
         float s = 1.0;
-        int r = font.GetHeight() * s;
+        int r = ibm.GetHeight() * s;
         for (int i = 0; i < 7; i++)
         {
             // TODO IBM font

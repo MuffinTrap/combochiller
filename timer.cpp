@@ -55,7 +55,7 @@ void Timer::Update(float deltaTime)
         {
             // Hold the index
             // when everything is shown.
-            letterIndex = greets[greetsIndex].length()-1;
+            letterIndex = (float)(greets[greetsIndex].length()-1) + 0.99f;
         }
     }
 }

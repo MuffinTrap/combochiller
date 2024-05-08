@@ -167,6 +167,7 @@ void PartsSetup(Vector2 faceDimensions, float faceScale, Vector2 facePosition)
     GetPart(partIntro).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
 
     GetPart(partHiya).facePositionTarget = faceposition;  // Hiya
+    GetPart(partHiya).effect = FXparticles;
 
     // Quirky
     int quart = gdl::ScreenXres/4.0f;

@@ -24,13 +24,20 @@ enum FX
 };
 struct Flake {
 	Vector2 pos;
-	uint color;
+    Vector2 velocity;
+	uint color; // Doubles as size
 };
+constexpr int ParticleAmount = 200;
 class Particles
 {
     public:
-        struct Flake flakes[100];
+        struct Flake flakes[ParticleAmount];
         float time = 0.0f;
+        Vector2 spawnPoint;
+        float spawnIndex;
+        float spawnSpeed;
+        float gravity;
+        float aliveTime;
         void Init();
         void Update(float deltaTime);
         void Draw();
