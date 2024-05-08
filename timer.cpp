@@ -30,7 +30,7 @@ Timer::Timer(std::string* greets, int amount, int showAmount, float duration, co
     // How many letters per second  5/10 = 0.5
 
     // TODO add little delay to end
-    this->textSpeed = (float)totalLetters/(duration-0.3f);
+    this->textSpeed = (float)totalLetters/(duration-1.0f);
 
     // TODO
     // Minimum text speed?
@@ -44,10 +44,19 @@ void Timer::Update(float deltaTime)
 {
     elapsed += deltaTime;
     letterIndex += textSpeed * deltaTime;
-    if (letterIndex >= greets[greetsIndex].length())
+    if (std::floor(letterIndex) >= greets[greetsIndex].length())
     {
-        greetsIndex += 1;
-        letterIndex = 0.0f;
+        if (greetsIndex + 1 < amount)
+        {
+            greetsIndex += 1;
+            letterIndex = 0.0f;
+        }
+        else 
+        {
+            // Hold the index
+            // when everything is shown.
+            letterIndex = greets[greetsIndex].length()-1;
+        }
     }
 }
 
@@ -91,15 +100,7 @@ const LineEffect& Timer::GetLineEffectEx(int index)
 
 std::string Timer::GetLine()
 {
-    if (greetsIndex<amount)
-    {
-        return greets[greetsIndex];
-    }
-    else
-    {
-        gdl_assert(false, "No more lines left");
-        return "";
-    }
+    return GetLineEx(greetsIndex);
 }
 
 std::string Timer::GetLineAt(int relativeIndex)
@@ -108,6 +109,11 @@ std::string Timer::GetLineAt(int relativeIndex)
     if (i >=0 && i < amount)
     {
         return greets[i];
+    }
+    else if (i >= amount)
+    {
+        // Keep returning the last one
+        return greets[amount-1];
     }
     else
     {
@@ -121,6 +127,11 @@ std::string Timer::GetLineEx(int exactIndex)
     if (i >=0 && i < amount)
     {
         return greets[i];
+    }
+    else if (i >= amount)
+    {
+        // Keep returning the last one
+        return greets[amount-1];
     }
     else
     {

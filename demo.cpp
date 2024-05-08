@@ -1,6 +1,7 @@
 #include "demo.h"
 #include "timer.h"
 #include "fx.h"
+#include "drawing.h"
 
 #include <wiiuse/wpad.h>
 #include "mgdl-input-wii.h"
@@ -25,13 +26,6 @@
 #include "fruits_png.h"
 
 #include "askMeToStay_ogg.h"
-/*
-#include "mel_tiles_png.h"
-#include "pointer_png.h"
-#include "font8x16_png.h"
-#include "sample3_ogg.h"
-#include "blipSelect_wav.h"
-*/
 
 #include "pastelpalette.h"
 
@@ -45,9 +39,7 @@ static float elapsed = 0.0f;
 static float skyScale = 2.0f;
 static float cloudWidth;
 
-
 // Parts
-static int partIndex = 0;
 static bool showGreets = true;
 FX partFx; // Currently active effect
 
@@ -77,144 +69,8 @@ static const int iHeart = 5;
 
 // TODO: Add lovely face?! Hearts!
 
+#include "parts.h"
 
-static std::string noLines[] = {
-    "       ",
-    "FCCCF - Wii & Chill    ",
-    "  "
-};
-
-static std::string hiya[] = {
-    "Hiya, Muffintrap here!",
-    "Cheers and greetings",
-    "to everyone at Outline!",
-
-    "I have been working",
-    "on a Wii library,",
-    "and wanted to do a",
-    "little demo with it.  "};
-
-static std::string quirky[] = {
-    "The Wii can be",
-    "a bit quirky",
-    "and C++ means",
-    "lots of typing &",
-    "null pointers.   "
-};
-
-static std::string modern[] = {
-    "But I like having",
-    "a semi-modern hardware",
-    "platform to play with.",
-    "It is also fun to make",
-    "games for.",
-    "Also, no shaders!", 
-    "Shaders are confusing...   "
-    };
-
-static std::string together[] = {
-    "I hope you enjoy this",
-    "a e s t h e t i c",
-    "I managed to put",
-    "together.  "
-    }; 
-
-static std::string art[] = {
-    "Sorry I did not",
-    "have time to",
-    "make the art",
-    "and music.",
-    "All you see",
-    "and hear",
-    "are free-to-use",
-    "assets.   "
-    };
-
-
-static std::string sceners[] = {
-    "Greetings to other",
-    "Nintendo sceners: "
-};
-static std::string names[] = {
-    "Vurpo",
-    "Halcy",
-    "RaccoonViolet",
-    "Mrs Beanbag",
-    "Aldroid",
-    "ToBach"};
-
-static std::string party[] = {
-    "I hope you all",
-    "  have a great party!   " };
-
-float fullRotation = PI*2.0f;
-static std::vector<Timer> parts =
-{
-    Timer(noLines, 3, 1, 5.0f, iNoFace, 0, 0),
-    Timer(hiya,7, 2, 23.49f, iCheers, 0.5f, fullRotation*3),
-
-    // how to get rotation to start from PI
-    // How to do the null pointer effect?
-    Timer(quirky,5, 4, 6.0f, iSad, 1.0f, PI),
-
-    Timer(modern,7, 2, 15.75f, iActually, 0.5f, fullRotation),
-
-    Timer(together, 4, 2, 7.0f, iCheers, 1.0f, PI),
-
-    // Frustrated
-    Timer(art, 8, 4, 11.7f, iFrustrated, 1.5f, PI),
-
-    // These are all together in a 46.second part
-
-    Timer(sceners, 2, 2, 3.0f, iNoFace, 0, 0),
-    Timer(names, 6, 6, 20.0f, iNoFace, 0, 0),
-    Timer(party, 2, 2,  6.0f, iHeart, 0.7f, fullRotation)
-};
-
-enum PartName
-{
-    partIntro = 0,
-    partHiya = 1,
-    partQuirky = 2,
-    partModern = 3,
-    partTogether = 4,
-    partArt = 5,
-    partSceners = 6,
-    partNames = 7,
-    partParty = 8
-};
-
-Timer& GetPart(int index)
-{
-    if (index < 0)
-    {
-        return parts.front();
-    }
-    else if ((u_int)index >= parts.size())
-    {
-        return parts.back();
-    }
-    else 
-    {
-        return parts[index];
-    }
-}
-
-void SetPart(int index)
-{
-    if (index < 0)
-    {
-        partIndex = 0;
-    }
-    else if ((u_int)index >= parts.size())
-    {
-        partIndex = parts.size()-1;
-    }
-    else 
-    {
-        partIndex = index;
-    }
-}
 
 Template::Template()
 {
@@ -322,6 +178,8 @@ void Template::Init()
     GetPart(partNames).effect = FXfruits;
 
     GetPart(partParty).facePositionTarget = faceposition;
+
+    GetPart(partEnding).facePositionTarget = Vector2(gdl::ScreenCenterX, 0 - cheers.Ysize() * faceScale);
 
     // Starting face position under the screen so cheers comes up
     faceposition = Vector2(gdl::ScreenCenterX, gdl::ScreenYres*2);
@@ -533,9 +391,8 @@ void Template::Draw()
 
     // DEBUG
     // DrawSprites();
-    // short left = 32;
     // DrawMenu(left, top + 120, 120);
-    // DrawTimingInfo(left, gdl::ScreenYres-font.GetHeight()*4*0.5f, 0.5f);
+    DrawTimingInfo(32, gdl::ScreenYres-font.GetHeight()*4*0.5f, 0.5f);
 }
 
 // Rotation of 0 means that the full face is showing
@@ -592,7 +449,7 @@ void Template::DrawLinesNoFX(Timer& part)
     // Inactive line settings
     float prog = 1.0f;
     u_int color = 7;
-    float scale = 0.75f;
+    float scale = 1.0f;
     for (int l = 1; l <= part.showAmount; l++)
     {
         // Remember that this is a negative number :D
