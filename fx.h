@@ -19,7 +19,8 @@ enum FX
     FXvoxelcube,
     FXtunnel,
     FXbirds,
-    FXfruits
+    FXfruits,
+    FXglitch
 };
 struct Flake {
 	Vector2 pos;

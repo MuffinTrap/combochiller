@@ -1,6 +1,12 @@
 #pragma once
 // Pastel POP-16
 // https://lospec.com/palette-list/pastel-pop-16-color
+
+enum PaletteColos {
+    PastelWhite = 1,
+    PastelNavy = 5
+};
+
 static u_int palette[] = 
 {
     0x000000FF, // 0: Black

@@ -16,11 +16,13 @@ class Template
     gdl::SpriteSet fruitSprites;
     gdl::SpriteSet muffin_sprites;
     gdl::Image fontImage;
+    gdl::Image ibmImage;
     gdl::Image sky1;
     gdl::Image sky2;
     gdl::Image sky3;
     gdl::Image sky4;
     gdl::FFont font;
+    gdl::FFont ibm;
     gdl::Music vaporwave;
     gdl::Sound vhsPlaySound;
     // gdl::MenuCreator menu;
@@ -40,7 +42,7 @@ class Template
         void DrawSprites();
         void DrawGreets();
         void DrawFace(gdl::Image* face, float rotation, Vector2 target);
-        void DrawClouds();
+        void DrawClouds(FX effect);
         void UpdateTiming();
 
         void DrawLinesNoFX(Timer& part);

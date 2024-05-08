@@ -16,6 +16,7 @@
 #include "sky3_png.h"
 #include "sky4_png.h"
 #include "m6x11_png.h"
+#include "font8x16_png.h"
 
 #include "sad_png.h"
 #include "cheers_png.h"
@@ -88,6 +89,8 @@ void Template::Init()
     // TODO combine these to one call
     fontImage.LoadImageBuffer(m6x11_png, m6x11_png_size, gdl::Nearest, gdl::RGBA8);
     font.BindSheet(fontImage, 22, 32, ' ');
+    ibmImage.LoadImageBuffer(font8x16_png, font8x16_png_size, gdl::Nearest, gdl::RGBA8);
+    ibm.BindSheet(ibmImage, 8, 16, ' ');
 
     sky1.LoadImageBuffer(sky1_png, sky1_png_size, gdl::Nearest, gdl::RGBA8);
 
@@ -136,55 +139,15 @@ void Template::Init()
 
     faceScale = 0.75f;
     faceposition = Vector2(gdl::ScreenCenterX, cheers.Ysize()*faceScale/2 + font.GetHeight());
+    PartsSetup(Vector2(cheers.Xsize(), cheers.Ysize()), faceScale, faceposition);
 
     // Text and effects
 
-    // Fruits to all lines in names
-    Timer& nms = parts[partNames];
-    nms.AddLineEffect(LineEffect(0, LineFX_FRUITS, 14)); // Vurpo - blue
-    nms.AddLineEffect(LineEffect(1, LineFX_FRUITS, 9)); // Halcy - rose
-    nms.AddLineEffect(LineEffect(2, LineFX_FRUITS, 15)); // Raccoon - violet
-    nms.AddLineEffect(LineEffect(3, LineFX_FRUITS, 10)); // BeanBag - yellow and blue
-    nms.AddLineEffect(LineEffect(3, LineFX_FRUITS, 13)); // BeanBag - yellow and blue
-    nms.AddLineEffect(LineEffect(4, LineFX_FRUITS, 12)); // Aldroid - green
-    nms.AddLineEffect(LineEffect(5, LineFX_FRUITS, 11)); // ToBach - orange
-
-    // Face position targets
-    GetPart(partIntro).facePositionTarget = faceposition;
-    GetPart(partIntro).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
-
-    GetPart(partHiya).facePositionTarget = faceposition;  // Hiya
-
-    // Quirky
-    int third = gdl::ScreenXres/3.0f;
-    int quart = gdl::ScreenXres/4.0f;
-    GetPart(partQuirky).facePositionTarget =  Vector2(gdl::ScreenCenterX + quart, faceposition.y); 
-    GetPart(partQuirky).textCenter =  Vector2(gdl::ScreenCenterX - quart, faceposition.y);
-
-    // Modern
-    GetPart(partModern).facePositionTarget = faceposition;
-    // Together
-    GetPart(partTogether).facePositionTarget = faceposition;
-    // Art
-    GetPart(partArt).facePositionTarget = Vector2(gdl::ScreenCenterX-quart, faceposition.y);
-    GetPart(partArt).textCenter = Vector2(gdl::ScreenCenterX+quart, faceposition.y);
-
-    // Sceners, names, party
-    GetPart(partSceners).facePositionTarget = faceposition;
-    GetPart(partSceners).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
-
-    GetPart(partNames).facePositionTarget = faceposition;
-    GetPart(partNames).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
-    GetPart(partNames).effect = FXfruits;
-
-    GetPart(partParty).facePositionTarget = faceposition;
-
-    GetPart(partEnding).facePositionTarget = Vector2(gdl::ScreenCenterX, 0 - cheers.Ysize() * faceScale);
 
     // Starting face position under the screen so cheers comes up
     faceposition = Vector2(gdl::ScreenCenterX, gdl::ScreenYres*2);
-
     defaultTextPosition = Vector2(gdl::ScreenCenterX, font.GetHeight() + cheers.Ysize()*faceScale);
+
 
     vaporwave.PlayMusic(false);
 }
@@ -281,81 +244,13 @@ void Template::Update()
     }
 }
 
-void DrawTextDouble(std::string text, short x, short y, float scale, gdl::FFont* font, 
-int lastLetter, float lastLetterProgress, u_int color, int letterWidth = -1)
-{
-    gdl_assert(((u_int)lastLetter < text.length()), "DrawTextDouble index out of text %u>=%u", lastLetter, text.length());
-    int lw = letterWidth;
-    if (lw < 0)
-    {
-        lw = font->GetWidth();
-    }
-    int wordWidth = lw * text.length() * scale;
-    int w = wordWidth/text.length();
-    char xx[2];
-    int startX = x-wordWidth/2;
-
-    int dx;
-    int dy;
-    for (int i = 0; i <= lastLetter; i++)
-    {
-        dx = startX + i * w;
-        dy = y;
-        if (i == lastLetter)
-        {
-            // Center the letter that is growing bigger
-            // Add to halfway and go back
-            float hw = lw * scale * 0.5f;
-            float hh = font->GetHeight()* scale * 0.5f;
-            dx += (hw) - (hw*lastLetterProgress);
-            dy += (hh) - (hh*lastLetterProgress);
-            scale *= lastLetterProgress;
-        }
-        gdl_assert((text[i]!=0), "DrawTextDouble tried to draw NULL character");
-        sprintf(xx, "%c", text[i]);
-
-        // Move the shadow with line progress
-
-        font->DrawText(xx, dx + 4*scale, dy + 4*scale, scale, palette[0]);
-        font->DrawText(xx, dx, dy, scale, color);
-    }
-}
-
-void DrawFruitsDouble(std::string text, short x, short y, float scale, gdl::SpriteSet* sprites, 
-int firstLetter, int lastLetter, u_int spriteIndex)
-{
-    gdl_assert(((u_int)lastLetter < text.length()), "DrawFruitsDouble index out of text %u>=%u", lastLetter, text.length());
-
-    const gdl::Sprite* first = sprites->SpriteInfo(0);
-    short spriteW = first->w * scale;
-    int wordWidth = text.length() * spriteW;
-    int w = wordWidth/text.length();
-    int startX = x-wordWidth/2;
-
-    int dx;
-    int dy;
-    for (u_int i = firstLetter; i <= lastLetter; i++)
-    {
-        if (text[i] == ' ')
-        {
-            continue;
-        }
-        dx = startX + i * w;
-        dy = y;
-        sprites->Put(dx + 4*scale, dy + 4*scale, spriteIndex, palette[0], 0,0, scale);
-        sprites->Put(dx, dy, spriteIndex, gdl::Color::White, 0,0, scale);
-    }
-
-}
-
 void Template::Draw()
 {
+    FX partFx = GetPart(partIndex).effect;
     // Draw Sky and parallax clouds
-    DrawClouds();
+    DrawClouds(partFx);
 
     // Draw part's effect
-    /*
-    partFx = parts[partIndex].effect;
     switch(partFx)
     {
         case FXparticles:
@@ -375,8 +270,10 @@ void Template::Draw()
 
         case FXbirds:
         break;
+
+        case FXglitch:
+        break;
     };
-    */
 
     if (showGreets)
     {
@@ -468,6 +365,10 @@ void Template::DrawLinesNoFX(Timer& part)
             prog = part.GetLetterProgress();
             color = 1;
             scale = 1.0f;
+            if (part.GetLineFXAt(relative) == LineFX_NULL)
+            {
+                color = part.GetLineEffectAt(relative).color;
+            }
         }
         DrawTextDouble(
             line,
@@ -520,7 +421,6 @@ void Template::DrawLinesFruit(Timer& part)
     // Inactive line settings
     float prog = 1.0f;
     u_int color = 7;
-    float scale = 0.75f;
     for (int l = 0; l < part.showAmount; l++)
     {
         if (l > part.greetsIndex)
@@ -538,7 +438,6 @@ void Template::DrawLinesFruit(Timer& part)
             last = std::floor(part.letterIndex);
             prog = part.GetLetterProgress();
             color = palette[1]; // White
-            scale = 1.0f;
         }
         DrawTextDouble(
             line,
@@ -599,6 +498,10 @@ void Template::DrawGreets()
         DrawLinesNoFX(part);
         break;
 
+        case FXglitch:
+        DrawLinesNoFX(part);
+        break;
+
         case FXfruits:
         DrawLinesFruit(part);
         break;
@@ -649,21 +552,46 @@ void Template::DrawTimingInfo(int x, int y, float scale)
     */
 }
 
-void Template::DrawClouds()
+static std::string bluescreen[] = {
+    ":(",
+    "It seems that I have crashed.",
+    "But no worry!",
+    "It's just a little segfault.",
+    "----------------------------------------------",
+    "Just a little segfault?!",
+    "You have no legs left!"
+};
+
+void Template::DrawClouds(FX effect)
 {
-    // Sky background
-    sky1.Put(
-            gdl::ScreenCenterX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
-    sky2.Put(
-            gdl::ScreenCenterX,
-            gdl::ScreenCenterY,
-            gdl::Color::White, 
-            gdl::Centered, gdl::Centered, 
-           skyScale, 0.0f);
+    if (effect == FXglitch)
+    {
+        gdl::DrawBoxF(0, 0, gdl::ScreenXres, gdl::ScreenYres, gdl::Color::Blue);
+        int y = 10;
+        float s = 1.0;
+        int r = font.GetHeight() * s;
+        for (int i = 0; i < 7; i++)
+        {
+            // TODO IBM font
+            ibm.DrawText(bluescreen[i].c_str(), 16, y + i*r, s, palette[PastelWhite]);
+        }
+    }
+    else 
+    {
+        // Sky background
+        sky1.Put(
+                gdl::ScreenCenterX,
+                gdl::ScreenCenterY,
+                gdl::Color::White, 
+                gdl::Centered, gdl::Centered, 
+            skyScale, 0.0f);
+        sky2.Put(
+                gdl::ScreenCenterX,
+                gdl::ScreenCenterY,
+                gdl::Color::White, 
+                gdl::Centered, gdl::Centered, 
+            skyScale, 0.0f);
+    }
 
     // Far Clouds
     float farScale = skyScale *1.0;
