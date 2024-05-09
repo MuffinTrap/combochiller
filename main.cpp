@@ -21,6 +21,7 @@ int main()
         //gdl::ConsoleMode();
         //Uncomment to see console messages
         //before game starts
+        /*
         while(1)
         {
             gdl::WiiInput::StartFrame();
@@ -29,6 +30,7 @@ int main()
             }
             VIDEO_WaitVSync();
         }
+        */
         Template temp = Template();
         temp.Init();
         while(1)
