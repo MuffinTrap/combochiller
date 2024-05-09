@@ -23,9 +23,10 @@ class Timer
 {
     public:
         Timer(std::string* greets, int amount, int showAmount, float duration, const int& faceIndex,
-        float rotationDuration, float rotationSpeed);
+        float rotationDuration, float rotationSpeed, float endDelay = 1.0f);
         void SetFX(FX effect);
         void AddLineEffect(LineEffect effect);
+        void ResetTimers();
 
 
         void Update(float deltaTime);

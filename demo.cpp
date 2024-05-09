@@ -73,6 +73,7 @@ static const int iHeart = 5;
 #include "parts.h"
 
 static Particles particleEffect = Particles();
+static Plasma fruitPlasma = Plasma();
 
 
 Template::Template()
@@ -155,6 +156,9 @@ void Template::Init()
     particleEffect.Init();
     particleEffect.aliveTime = GetPart(partHiya).duration/2.0f;
 
+    fruitPlasma.Init((std::floor(gdl::ScreenXres/4)-40)/2, (gdl::ScreenYres-40)/2);
+    fruitPlasma.speed = 1.4f;
+
     vaporwave.PlayMusic(false);
 }
 
@@ -211,6 +215,12 @@ void Template::Update()
             particleEffect.spawnPoint = Vector2(faceposition.x, faceposition.y - cheers.Ysize());
             particleEffect.Update(deltaTime);
         break;
+
+        case FXplasma:
+        case FXfruits:
+            fruitPlasma.Update(deltaTime);
+            break;
+
         default:
         break;
     }
@@ -225,11 +235,16 @@ void Template::Update()
     }
     if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_MINUS))
     {
-        SetPart(partIndex-1);
-        elapsed -= (part.duration - part.elapsed);
-        SetPart(partIndex-1);
+        // Reset current
         Timer &part = GetPart(partIndex);
-        elapsed -= (part.duration - part.elapsed);
+        elapsed -= (part.elapsed);
+        part.ResetTimers();
+
+        // Reset previous
+        SetPart(partIndex-1);
+        part = GetPart(partIndex);
+        elapsed -= (part.duration);
+        part.ResetTimers();
         vaporwave.JumpToSeconds(elapsed);
     }
 
@@ -286,7 +301,10 @@ void Template::Draw()
         case FXtunnel:
         break;
 
-        case FXplasma:
+        case FXfruits:
+        case FXplasma: 
+            fruitPlasma.Draw(20,20, false);
+            fruitPlasma.Draw(gdl::ScreenCenterX+gdl::ScreenXres/4+20, 20, true);
         break;
 
         case FXbirds:
@@ -537,6 +555,7 @@ void Template::DrawSprites()
     short placeY = 0;
     for (short i = 0; i < 15; i++)
     {
+        ibm.Printf(placeX - spriteW*2, placeY, scale, gdl::Color::White, "%d:", i);
         fruitSprites.Put(placeX, placeY, i, gdl::Color::White, 0, 0, scale);
         placeY += spriteH;
     }

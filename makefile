@@ -109,7 +109,9 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
 					-L$(PORTLIBS_LIB)
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
-.PHONY: $(BUILD) clean
+.PHONY: $(BUILD) clean all
+
+all: $(BUILD)
 
 #---------------------------------------------------------------------------------
 $(BUILD):

@@ -10,7 +10,7 @@ LineEffect::LineEffect(int i, LineFX fx, u_int c)
 }
 
         
-Timer::Timer(std::string* greets, int amount, int showAmount, float duration, const int& faceIndex, float rotationDuration, float rotationSpeed) // colors, position()
+Timer::Timer(std::string* greets, int amount, int showAmount, float duration, const int& faceIndex, float rotationDuration, float rotationSpeed, float endDelay) // colors, position()
 {
     this->amount=amount;
     this->showAmount = showAmount;
@@ -30,7 +30,7 @@ Timer::Timer(std::string* greets, int amount, int showAmount, float duration, co
     // How many letters per second  5/10 = 0.5
 
     // TODO add little delay to end
-    this->textSpeed = (float)totalLetters/(duration-1.0f);
+    this->textSpeed = (float)totalLetters/(duration-endDelay);
 
     // TODO
     // Minimum text speed?
@@ -38,6 +38,13 @@ Timer::Timer(std::string* greets, int amount, int showAmount, float duration, co
     greetsIndex = 0;
     letterIndex = 0.0f;
     this->elapsed = 0.0f;
+}
+
+void Timer::ResetTimers()
+{
+    elapsed = 0.0f;
+    letterIndex = 0;
+    greetsIndex = 0;
 }
 
 void Timer::Update(float deltaTime)

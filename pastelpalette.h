@@ -4,6 +4,7 @@
 
 enum PaletteColos {
     PastelWhite = 1,
+    PastelDarkPurple = 4,
     PastelNavy = 5
 };
 

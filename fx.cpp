@@ -106,34 +106,39 @@ void Particles::Draw()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#define J 255.f/360*3
-#define K 255.f/360*2
-#define L 255.f/360*1
 
-void Plasma::Init() {
-    image.Create(128, 128, gdl::Linear, gdl::RGBA8);
-    for (short c=0; c<256; c++) {
 
-        int r = 255*fabs(sin((J*c)*ROTPI));
-        int g = 255*fabs(sin((K*c)*ROTPI));
-        int b = 255*fabs(sin((L*c)*ROTPI));
-
-        colTable[c] = RGBA(r, g, b, 255);
-
-    }
+void Plasma::Init(short w, short h) {
+    width = w;
+    height = h;
+    plasma.Create(w,h, gdl::Linear, gdl::RGBA8);
 }
 
-void Plasma::Update(float delta) {
+void Plasma::Update(float deltaTime) {
 
-    for(short py=0; py<128; py++) {
-        for(short px=0; px<128; px++) {
-            short col = (sin(px*PI/270)*255)+(sin(py*PI/45)*31)+(sin(((py+px)+(4*angle))*PI/90)*63);
-            image.Texture.PokePixel(px, py, colTable[abs(col)%256]);
+    for(short py=0; py<height; py++) {
+        for(short px=0; px<width; px++) {
+            u_char col = (sin(px*PI/270)*16)+(sin(py*PI/45)*2)+(sin(((py+px)+(4*angle))*PI/90)*8);
+            plasma.Texture.PokePixel(px, py, palette[1+col%15]);
         }
     }
-    // Flush texture so that updated pixels will be drawn properly
-    image.Texture.Flush();
-    image.PutS(0, 0, gdl::ScreenXres, gdl::ScreenYres, gdl::Color::White);
+    plasma.Texture.Flush();
+    angle		+= speed*deltaTime;
+}
 
-    angle		+= 0.1f*delta;
+void Plasma::Draw(short x, short y, bool flip)
+{
+    short l = x;
+    short r = x + width * scale;
+    short t = y;
+    short b = y + height * scale;
+    gdl::DrawBoxF(l-2, t-2, r+2, b+2, palette[PastelDarkPurple]);
+    if (flip)
+    {
+        plasma.PutS(l,t, r, b);
+    }
+    else 
+    {
+        plasma.PutS(r, t, l, b);
+    }
 }

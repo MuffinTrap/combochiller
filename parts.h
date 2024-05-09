@@ -79,7 +79,7 @@ static std::string names[] = {
     "RaccoonViolet",
     "Mrs Beanbag",
     "Aldroid",
-    "ToBach"};
+    " ToBach "}; // Otherwise last fruit shows under h
 
 static std::string party[] = {
     "I hope you all",
@@ -108,9 +108,9 @@ static std::vector<Timer> parts =
 
     // These are all together in a 46.second part
 
-    Timer(sceners, 2, 2, 4.0f, iNoFace, 0, 0),
-    Timer(names, 6, 6, 19.0f, iNoFace, 0, 0),
-    Timer(party, 2, 2,  6.0f, iHeart, 0.7f, fullRotation),
+    Timer(sceners, 2, 2, 8.0f, iNoFace, 0, 0, 4.0f),
+    Timer(names, 6, 6, 15.0f, iNoFace, 0, 0, 6.0f),
+    Timer(party, 2, 2,  10.0f, iHeart, 0.7f, fullRotation, 6.0f),
 
     // Over the end
     Timer(ending,1,1,28.0f, iHeart,1.4,fullRotation)
@@ -187,6 +187,7 @@ void PartsSetup(Vector2 faceDimensions, float faceScale, Vector2 facePosition)
     // Sceners, names, party
     GetPart(partSceners).facePositionTarget = faceposition;
     GetPart(partSceners).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
+    GetPart(partSceners).effect = FXplasma;
 
     GetPart(partNames).facePositionTarget = faceposition;
     GetPart(partNames).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);

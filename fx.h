@@ -48,10 +48,14 @@ class Plasma
     public:
         gdl::Image image;
         float angle = 0;
-        u_int colTable[256];
-        void Init();
+        float speed = 0.1f;
+        short width;
+        short height;
+        float scale = 2.0f;
+        gdl::Image plasma;
+        void Init(short w, short h);
         void Update(float deltaTime);
-        void Draw();
+        void Draw(short x, short y, bool flip);
 };
 
 class Voxelcube
