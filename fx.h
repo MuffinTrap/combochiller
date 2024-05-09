@@ -1,5 +1,7 @@
 #pragma once
 #include "mgdl-wii.h"
+#include "star.h"
+#include <vector>
 
 typedef struct Vector2
 {
@@ -14,7 +16,6 @@ enum FX
 {
     FXnone,
     FXparticles,
-    FXfire,
     FXplasma,
     FXvoxelcube,
     FXtunnel,
@@ -76,19 +77,34 @@ class Voxelcube
     void Draw();
 };
 
-struct Fruit {
-	Vector2 pos;
-	uint spriteIndex;
+constexpr int StarAmount = 16;
+
+struct StarRing
+{
+    float z;
+    float angle;
+};
+
+struct StarParticle {
+	glm::vec3 pos;
+	uint color;
 };
 class Tunnel
 {
     public:
-    gdl::SpriteSet sprites;
-    gdl::Image fruitAtlas;
-    Fruit fruits[128];
+    Mesh starMesh;
+    std::vector<StarParticle> stars;
+    std::vector<StarRing> rings;
     float time = 0;
+    float rotationSpeed = 16.0f;
+    float speed = 10.0f;
+    float lastRingDepth = 80.0f;
+    float stepZ = 10.0f;
+    float angleStep = PI*2.0f/12;
+    float scale;
+    Tunnel();
 
-    void Init();
+    void Init(float radius, int ringAmount, float starSize, float scale);
     void Update(float deltaTime);
     void Draw();
 };

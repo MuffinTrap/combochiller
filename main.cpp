@@ -17,22 +17,20 @@ int main()
 {
     init();
     {
-        Template temp = Template();
-        temp.Init();
 
-        gdl::ConsoleMode();
+        //gdl::ConsoleMode();
         //Uncomment to see console messages
         //before game starts
-        /*
         while(1)
         {
             gdl::WiiInput::StartFrame();
-            if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_A)){
+            if (gdl::WiiInput::ButtonPress(WPAD_BUTTON_B)){
                 break;
             }
             VIDEO_WaitVSync();
         }
-        */
+        Template temp = Template();
+        temp.Init();
         while(1)
         {
             gdl::WiiInput::StartFrame();

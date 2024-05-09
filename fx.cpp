@@ -1,11 +1,35 @@
 #include "fx.h"
 #include "pastelpalette.h"
+#include "drawing.h"
 
 #include <cstdlib>
 
 #include <mgdl-wii.h>
 #include <gccore.h>
+using namespace glm;
 
+glm::vec3 rotatex(vec3 p, float angle) {
+	float xt = p.x;
+	float yt = p.y*cos(angle) - p.z*sin(angle);
+	float zt = p.y*sin(angle) + p.z*cos(angle);
+	return vec3(xt, yt, zt);
+}
+
+// -- rotate around y
+glm::vec3 rotatey(vec3 p, float angle){
+	float xt = p.x*cos(angle) - p.z*sin(angle);
+	float yt = p.y;
+	float zt = p.x*sin(angle) + p.z*cos(angle);
+	return vec3(xt, yt, zt);
+}
+
+// -- rotate around z
+glm::vec3 rotatez(vec3 p, float angle) {
+	float xt = p.x*cos(angle) - p.y*sin(angle);
+	float yt = p.x*sin(angle) + p.y*cos(angle);
+	float zt = p.z;
+	return vec3(xt, yt, zt);
+}
 Vector2::Vector2()
 {
     this->x = 0.0f;
@@ -195,4 +219,135 @@ void Plasma::Draw(short x, bool flip)
     gdl::DrawBoxF(l-2, t-2, r+2, b+2, palette[PastelDarkPurple]);
 
     plasma.PutS(l,t, r, b);
+}
+
+/////////////////////////////
+
+Tunnel::Tunnel()
+{
+}
+void Tunnel::Init(float radius, int ringAmount, float starSize, float scale)
+{
+    this->scale = scale;
+    starMesh = Star::CreateMesh(0, starSize/2, starSize, 1);
+    time = 0;
+    stars.reserve(StarAmount);
+    glm::vec3 R(radius, 0.0f, 30.0f);
+    float step = (PI * 2.0f)/ StarAmount;
+    float angle = 0.0f;
+
+    for (int i = 0; i < StarAmount; i++)
+    {
+        glm::vec3 rotated = rotatez(R, angle);
+        angle += step;
+        StarParticle s = {rotated, (u_int)(8+(i%8))};
+        stars.push_back(s);
+    }
+
+    stepZ = lastRingDepth/ringAmount;
+    angleStep = 360.0f / ringAmount; // DEGREES!
+    for (int r = 0; r < ringAmount; r++)
+    {
+        // First star must be closest
+        rings.push_back({0 + stepZ * r, 0+angleStep*r});
+    }
+}
+
+void Tunnel::Update(float deltaTime)
+{
+    for (u_int i = 0; i < rings.size(); i++)
+    {
+        rings[i].angle += rotationSpeed * deltaTime;
+        rings[i].z -= speed * deltaTime;
+        if (rings[i].z < 0.0f)
+        {
+            rings[i].z = lastRingDepth;
+        }
+    }
+}
+
+void Tunnel::Draw()
+{
+	GX_ClearVtxDesc();
+    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+    GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
+
+    // make sure to draw the closest ring last
+
+    // Start from the furthest
+    float longZ = 0;
+    u_int fr = 0;
+    for (u_int r = 0; r < rings.size(); r++)
+    {
+        if (rings[r].z > longZ)
+        {
+            longZ = rings[r].z;
+            fr = r;
+        }
+    }
+
+    u_int r = fr;
+    u_int countdown = rings.size();
+    while (countdown > 0)
+    {
+        // Do a ring
+        float Z = rings[r].z;
+        float A = rings[r].angle;
+		// Matrix calculation stuff
+
+        // Temprorary view matrix
+        Mtx	tempMatrix;
+
+        // Translate from current model matrix to center of screen, save to tempMatrix
+        guMtxApplyTrans(gdl::wii::ModelMtx, tempMatrix, gdl::ScreenCenterX, gdl::ScreenCenterY, 0);
+
+        // Create rotation matrix for this ring
+        guVector tempRot={0, 0, 1};
+        Mtx	tempRotMatrix;
+        guMtxRotAxisDeg(tempRotMatrix, &tempRot, A);
+        guMtxScaleApply(tempRotMatrix, tempRotMatrix, scale/Z, scale/Z, 1);
+
+        // Add the rotation to view matrix
+        guMtxConcat(tempMatrix, tempRotMatrix, tempMatrix);
+
+        // Apply the view matrix
+		GX_LoadPosMtxImm(tempMatrix, GX_PNMTX0);
+
+        // Draw a star on every point
+        GX_Begin(GX_TRIANGLES, GX_VTXFMT0, StarAmount * starMesh.positions.size());
+
+        // short size = 8.0f;
+        short x;
+        short y;
+        for (u_int i = 0; i < StarAmount; i++)
+        {
+            StarParticle& s = stars[i];
+            uint col = palette[s.color];// No black particles
+
+            // Draw A star by going through the points in mesh
+            for (u_int v = 0; v < starMesh.positions.size(); v++)
+            {
+                // Translate to 2D space
+                x = (s.pos.x + starMesh.positions[v].x);// / Z*scale;
+                y = (s.pos.y + starMesh.positions[v].y);// / Z*scale;
+                GX_Position2s16(x, y);
+                GX_Color4u8(RED(col), GREEN(col), BLUE(col), ALPHA(col));
+            }
+        } // This ring is done
+
+        GX_End();
+        GX_LoadPosMtxImm(gdl::wii::ModelMtx, GX_PNMTX0);
+
+        // next ring
+        if (r == 0) {
+            r = rings.size()-1;
+        }
+        else{
+            r = r-1;
+        }
+        countdown--;
+    }
+
+    GX_LoadPosMtxImm(gdl::wii::ModelMtx, GX_PNMTX0);
 }

@@ -88,6 +88,8 @@ static int fruitParticleCounter = 0;
 
 static Particles particleEffect = Particles();
 static Plasma fruitPlasma = Plasma();
+static Tunnel starTunnel = Tunnel();
+static float tunnelZ = 100.0f;
 
 
 Template::Template()
@@ -181,6 +183,9 @@ void Template::Init()
     fruitPlasma.targetY = 20;
     fruitPlasma.moveSpeed = 2.0f;
 
+
+    starTunnel.Init(gdl::ScreenXres/8.0f, 16, 30.0f, 10.0f);
+
     vaporwave.PlayMusic(false);
 }
 
@@ -203,6 +208,7 @@ u_int ColorToFruit(u_int color)
 void Template::Update()
 {
     UpdateTiming();
+
     cloudX -= cloudSpeed*deltaTime;
     if (cloudX <= -cloudWidth)
     {
@@ -278,6 +284,15 @@ void Template::Update()
             particleEffect.Update(deltaTime);
         break;
 
+        case FXtunnel:
+            faceScale -= 0.1f * deltaTime;
+            if (faceScale < 0.0f)
+            {
+                faceScale = 0.0f;
+            }
+            starTunnel.Update(deltaTime);
+        break;
+
         case FXplasma:
         case FXfruits:
             fruitPlasma.Update(deltaTime);
@@ -288,6 +303,7 @@ void Template::Update()
         default:
         break;
     }
+
 
     // SKIP PARTS
 
@@ -345,9 +361,11 @@ void Template::Update()
 
 void Template::Draw()
 {
+
     FX partFx = GetPart(partIndex).effect;
     // Draw Sky and parallax clouds
     DrawClouds(partFx);
+
 
     // Draw part's effect
     switch(partFx)
@@ -356,13 +374,8 @@ void Template::Draw()
         particleEffect.Draw();
         break;
 
-        case FXfire:
-        break;
-
-        case FXvoxelcube:
-        break;
-
         case FXtunnel:
+            starTunnel.Draw();
         break;
 
         case FXfruits:
@@ -372,23 +385,25 @@ void Template::Draw()
             short flipX = gdl::ScreenXres-20;
             fruitPlasma.Draw(leftx, false);
             fruitPlasma.Draw(flipX, true);
-
-            // Draw the dropping fruits
-            particleEffect.DrawAsSprites(&fruitSprites, fruitScale);
         }
         break;
 
-        case FXbirds:
-        break;
-
-        case FXglitch:
+        default:
         break;
     };
+
 
     if (showGreets)
     {
        DrawGreets();
     }
+
+    if (partFx == FXfruits)
+    {
+        // Draw the dropping fruits over the letters
+        particleEffect.DrawAsSprites(&fruitSprites, fruitScale);
+    }
+
     if (drawFadeRectangle)
     {
         u_int black = palette[0] - 255 + fadeAlpha;
@@ -396,10 +411,11 @@ void Template::Draw()
     }
 
 
+    // Testing 3D
     // DEBUG
     // DrawSprites();
     // DrawMenu(left, top + 120, 120);
-    DrawTimingInfo(32, gdl::ScreenYres-font.GetHeight()*4*0.5f, 0.5f);
+    // DrawTimingInfo(32, gdl::ScreenYres-font.GetHeight()*4*0.5f, 0.5f);
 }
 
 // Rotation of 0 means that the full face is showing
@@ -645,6 +661,7 @@ void Template::DrawTimingInfo(int x, int y, float scale)
     font.Printf(x, y + ystep * 2, scale, palette[1], "part %u/%u", partIndex, parts.size());
     Timer& part = GetPart(partIndex);
     font.Printf(x, y + ystep * 3, scale, palette[2], "progress %2.1f", part.GetProgress());
+    font.Printf(x, y + ystep * -1, scale, palette[2], "tunnelZ %2.1f", tunnelZ);
     /*
 
     ibmFont.Printf(x+4, y + ystep * 1+4, scale, gdl::Color::Black, "Normalized Deltatime: %f", gdl::Delta);

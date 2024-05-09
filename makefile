@@ -41,6 +41,7 @@ LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project (add your own at the left-most)
 #---------------------------------------------------------------------------------
+# GLM is a header only library
 LIBS	:=	-lmgdl -lvalloc -lwiiuse -loggplayer -lvorbisidec -lpng -lz -lfat -lbte -lasnd -logc -lm
 
 #---------------------------------------------------------------------------------

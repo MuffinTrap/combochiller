@@ -70,7 +70,7 @@ static std::string art[] = {
 
 
 static std::string sceners[] = {
-    "Greetings to other",
+    "Greetings to all",
     "Nintendo sceners!"
 };
 static std::string names[] = {
@@ -195,7 +195,9 @@ void PartsSetup(Vector2 faceDimensions, float faceScale, Vector2 facePosition)
     GetPart(partNames).textCenter = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
     GetPart(partNames).effect = FXfruits;
 
-    GetPart(partParty).facePositionTarget = faceposition;
+    GetPart(partParty).facePositionTarget = Vector2(gdl::ScreenCenterX, gdl::ScreenCenterY);
+    GetPart(partParty).effect = FXtunnel;
 
-    GetPart(partEnding).facePositionTarget = Vector2(gdl::ScreenCenterX, 0 - faceDimensions.y * faceScale);
+    GetPart(partEnding).facePositionTarget = Vector2(gdl::ScreenCenterX, gdl::ScreenYres*-2.0f);
+    GetPart(partEnding).effect = FXtunnel;
 }
