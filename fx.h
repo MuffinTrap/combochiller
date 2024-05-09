@@ -22,10 +22,15 @@ enum FX
     FXfruits,
     FXglitch
 };
+
+float RandFloat();
+float RandDir();
+
 struct Flake {
 	Vector2 pos;
     Vector2 velocity;
-	uint color; // Doubles as size
+	uint color; // Doubles as size and fruit index :3
+    bool active;
 };
 constexpr int ParticleAmount = 200;
 class Particles
@@ -40,7 +45,10 @@ class Particles
         float aliveTime;
         void Init();
         void Update(float deltaTime);
+        void Reset(int index, Vector2 position, Vector2 velocity, uint fruitIndex, bool alive);
+        void StopAll();
         void Draw();
+        void DrawAsSprites(gdl::SpriteSet* sprites, float scale);
 };
 
 class Plasma

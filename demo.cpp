@@ -70,6 +70,20 @@ static const int iHeart = 5;
 
 // TODO: Add lovely face?! Hearts!
 
+// Fruit hack
+
+static const float fruitScale = 2.0f; // Fruit 16px, font 32px
+static const float fruitLetterScale = 1.0f;
+static const int fruitSize = 16*fruitScale;
+static const float fruitRowHeight = fruitSize * 1.5f;
+
+static float GetFruitLineY(int lineIndex)
+{
+    return gdl::ScreenCenterY + (lineIndex-3) * fruitRowHeight;
+}
+
+static int fruitParticleCounter = 0;
+
 #include "parts.h"
 
 static Particles particleEffect = Particles();
@@ -204,6 +218,9 @@ void Template::Update()
     bigCloudX -= bigCloudSpeed * deltaTime;
 
     Timer &part = GetPart(partIndex);
+
+    short prevLetterIndex = std::floor(part.letterIndex);
+
     part.Update(deltaTime);
 
     // Move the plasma away when fruits part
@@ -214,6 +231,24 @@ void Template::Update()
         if (part.duration - part.elapsed < part.endDelay/2)
         {
             fruitPlasma.targetY = gdl::ScreenYres + 20;
+        }
+
+        // Notice when letter starts under a fruit
+        // and add the fruit as a particle
+        short newLetterIndex = std::floor(part.letterIndex);
+        if (newLetterIndex > prevLetterIndex)
+        {
+            // Drop a fruit
+            short fruitY = GetFruitLineY(part.greetsIndex);
+            Vector2 startPos = GetFruitPosition(part.GetLineAt(0), gdl::ScreenCenterX, fruitY, fruitScale, &fruitSprites, newLetterIndex);
+
+            const LineEffect& effect = part.GetLineEffectAt(0);
+            uint fruitIndex = ColorToFruit(effect.color);
+
+            float dx = RandDir();
+            float dy = RandFloat() * -5.0f;
+            particleEffect.Reset(fruitParticleCounter, startPos, Vector2(dx, dy ), fruitIndex, true);
+            fruitParticleCounter++;
         }
     }
 
@@ -228,6 +263,12 @@ void Template::Update()
         else
         {
             SetPart(partIndex + 1);
+            // Effect of new part
+            Timer &part = GetPart(partIndex);
+            if (part.effect == FXfruits)
+            {
+                particleEffect.StopAll();
+            }
         }
     }
     switch(part.effect)
@@ -240,6 +281,8 @@ void Template::Update()
         case FXplasma:
         case FXfruits:
             fruitPlasma.Update(deltaTime);
+            // Dropping fruits
+            particleEffect.Update(deltaTime);
             break;
 
         default:
@@ -329,6 +372,9 @@ void Template::Draw()
             short flipX = gdl::ScreenXres-20;
             fruitPlasma.Draw(leftx, false);
             fruitPlasma.Draw(flipX, true);
+
+            // Draw the dropping fruits
+            particleEffect.DrawAsSprites(&fruitSprites, fruitScale);
         }
         break;
 
@@ -445,41 +491,6 @@ void Template::DrawLinesNoFX(Timer& part)
 
 void Template::DrawLinesFruit(Timer& part)
 {
-    float fruitScale = 2.0f; // Fruit 16px, font 32px
-    float fruitLetterScale = 1.0f;
-    int fruitSize = 16*fruitScale;
-    float rowHeight = fruitSize * 1.5f;
-    int fruitLinesStartY = gdl::ScreenCenterY + rowHeight * 3;
-
-    for (int fl = 0; fl < part.amount; fl++)
-    {
-        std::string line = part.GetLineEx(fl);
-        const LineEffect& effect = part.GetLineEffectEx(fl);
-        if (fl > part.greetsIndex)
-        {
-            // Ahead of letters, draw line of fruits
-            DrawFruitsDouble(
-                line,
-                gdl::ScreenCenterX,
-                fruitLinesStartY + (-6 + fl) * rowHeight,
-                fruitScale, &fruitSprites, 
-                0, line.length()-1, ColorToFruit(effect.color));
-        }
-        else if (fl == part.greetsIndex)
-        {
-            // Draw fruits that do not have letters yet
-            int first = std::floor(part.letterIndex);
-            DrawFruitsDouble(
-                line,
-                gdl::ScreenCenterX,
-                fruitLinesStartY + (-6 + fl)* rowHeight,
-                fruitScale, &fruitSprites, 
-                first, line.length()-1, ColorToFruit(effect.color));
-        }
-        else {
-            // Do not draw any fruits
-        }
-    }
 
     // Draw letters
     // Inactive line settings
@@ -506,10 +517,42 @@ void Template::DrawLinesFruit(Timer& part)
         DrawTextDouble(
             line,
             gdl::ScreenCenterX, 
-            fruitLinesStartY + (-6 + l)* rowHeight,
+            GetFruitLineY(l),
             fruitLetterScale, &font, 
             last, prog, color,
             fruitSize); 
+    }
+
+    // Draw Fruits 
+
+    for (int fl = 0; fl < part.amount; fl++)
+    {
+        std::string line = part.GetLineEx(fl);
+        const LineEffect& effect = part.GetLineEffectEx(fl);
+        if (fl > part.greetsIndex)
+        {
+            // Ahead of letters, draw line of fruits
+            DrawFruitsDouble(
+                line,
+                gdl::ScreenCenterX,
+                GetFruitLineY(fl),
+                fruitScale, &fruitSprites, 
+                0, line.length()-1, ColorToFruit(effect.color));
+        }
+        else if (fl == part.greetsIndex)
+        {
+            // Draw fruits that do not have letters yet
+            int first = std::floor(part.letterIndex);
+            DrawFruitsDouble(
+                line,
+                gdl::ScreenCenterX,
+                GetFruitLineY(fl),
+                fruitScale, &fruitSprites, 
+                first+ 1, line.length()-1, ColorToFruit(effect.color));
+        }
+        else {
+            // Do not draw any fruits
+        }
     }
 }
 

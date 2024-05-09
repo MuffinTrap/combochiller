@@ -46,6 +46,18 @@ int lastLetter, float lastLetterProgress, u_int color, int letterWidth = -1)
     }
 }
 
+Vector2 GetFruitPosition(std::string text, short x, short y, float scale, gdl::SpriteSet* sprites, 
+int letterIndex)
+{
+    const gdl::Sprite* first = sprites->SpriteInfo(0);
+    short spriteW = first->w * scale;
+    int wordWidth = text.length() * spriteW;
+    int w = wordWidth/text.length();
+    int startX = x-wordWidth/2;
+
+    return Vector2(startX + letterIndex * w, y);
+}
+
 void DrawFruitsDouble(std::string text, short x, short y, float scale, gdl::SpriteSet* sprites, 
 int firstLetter, int lastLetter, u_int spriteIndex)
 {

@@ -17,22 +17,40 @@ Vector2::Vector2(float x, float y)
     this->x = x;
     this->y = y;
 }
+
+float RandFloat()
+{
+    return (rand()%1000)/1000.0f;
+}
+float RandDir()
+{
+    return ((rand()%2000)-1000)/1000.0f;
+}
+
 void Particles::Init() {
     // Snow flakes
     for (int i = 0; i < ParticleAmount; i++)
     {
-        Flake a;
+        flakes[i] = Flake();
         // Create under the screen
-        a.pos = Vector2(0,gdl::ScreenYres + 10);
-        a.velocity = Vector2(0,0);
-        a.color = 8 + (rand()% 32);
-        flakes[i] = a;
+        Reset(i, Vector2(0,gdl::ScreenYres + 10), Vector2(0,0), 8 + (rand()% 32), false);
     }
     time = 0.0f;
     spawnIndex = 0;
     spawnSpeed = 160.0f;
     gravity = 8.0f;
     aliveTime = 1.0f;
+}
+
+void Particles::Reset(int index, Vector2 position, Vector2 velocity, uint fruitIndex, bool alive){
+    if (index < ParticleAmount)
+    {
+        Flake& p = flakes[index];
+        p.pos = position;
+        p.velocity = velocity;
+        p.color = fruitIndex;
+        p.active = alive;
+    }
 }
 
 static void DrawPoints(Flake pointsArray[])
@@ -80,20 +98,28 @@ void Particles::Update(float deltaTime) {
         {
             for(int i = amountNow; i < amountNow + createAmount; i++)
             {
-                flakes[i].pos = spawnPoint;
-                float dx = (rand()%200-100)/100.0f;
-                float dy = -0.1f + (rand()%100)/-100.0f;
-                flakes[i].velocity = Vector2(dx * 4.0f, dy * 5.0f);
+                float dx = RandDir() * 8.0f;
+                float dy = -0.1f - RandFloat() * 2.0f;
+                Reset(i, spawnPoint, Vector2(dx, dy), flakes[i].color, true);
             }
         }
     }
 
     for (int i = 0; i < ParticleAmount; i++)
     {
-        flakes[i].velocity.y += gravity * deltaTime; 
+        Flake& p = flakes[i];
+        if (p.active)
+        {
+            p.velocity.y += gravity * deltaTime; 
 
-        flakes[i].pos.x += flakes[i].velocity.x;
-        flakes[i].pos.y += flakes[i].velocity.y;
+            p.pos.x += flakes[i].velocity.x;
+            p.pos.y += flakes[i].velocity.y;
+
+            if (p.pos.y > gdl::ScreenYres + 64)
+            {
+                p.active = false;
+            }
+        }
     }
 }
 
@@ -102,6 +128,27 @@ void Particles::Draw()
     if (time < aliveTime)
     {
         DrawPoints(flakes);
+    }
+}
+
+void Particles::StopAll()
+{
+    for(int i = 0; i < ParticleAmount; i++)
+    {
+        Flake& p = flakes[i];
+        p.active = false;
+    }
+}
+
+void Particles::DrawAsSprites(gdl::SpriteSet* sprites, float scale)
+{
+    for(int i = 0; i < ParticleAmount; i++)
+    {
+        Flake& p = flakes[i];
+        if (p.active)
+        {
+            sprites->Put(p.pos.x, p.pos.y, p.color, gdl::Color::White, 0, 0, scale);
+        }
     }
 }
 
