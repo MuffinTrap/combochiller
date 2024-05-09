@@ -124,21 +124,28 @@ void Plasma::Update(float deltaTime) {
     }
     plasma.Texture.Flush();
     angle		+= speed*deltaTime;
+
+    float ydiff = targetY-y;
+    if (ydiff > 1.0f)
+    {
+        y += (moveSpeed*ydiff) * deltaTime;
+    }
 }
 
-void Plasma::Draw(short x, short y, bool flip)
+void Plasma::Draw(short x, bool flip)
 {
-    short l = x;
-    short r = x + width * scale;
-    short t = y;
-    short b = y + height * scale;
-    gdl::DrawBoxF(l-2, t-2, r+2, b+2, palette[PastelDarkPurple]);
+    short w = width;
     if (flip)
     {
-        plasma.PutS(l,t, r, b);
+         w *=-1;
     }
-    else 
-    {
-        plasma.PutS(r, t, l, b);
-    }
+
+    short l = x;
+    short r = x + w * scale;
+    short t = y;
+    short b = y + height * scale;
+
+    gdl::DrawBoxF(l-2, t-2, r+2, b+2, palette[PastelDarkPurple]);
+
+    plasma.PutS(l,t, r, b);
 }

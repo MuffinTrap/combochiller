@@ -46,16 +46,19 @@ class Particles
 class Plasma
 {
     public:
-        gdl::Image image;
         float angle = 0;
         float speed = 0.1f;
+        float scale = 2.0f;
         short width;
         short height;
-        float scale = 2.0f;
         gdl::Image plasma;
+        float y;
+        float targetY;
+        float moveSpeed;
+
         void Init(short w, short h);
         void Update(float deltaTime);
-        void Draw(short x, short y, bool flip);
+        void Draw(short x, bool flip);
 };
 
 class Voxelcube

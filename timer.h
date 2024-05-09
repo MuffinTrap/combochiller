@@ -52,6 +52,7 @@ class Timer
         float letterIndex;
         float rotationDuration;
         float rotationSpeed;
+        float endDelay;
         int amount;
         int showAmount; // How many lines to show at once
         int faceIndex;

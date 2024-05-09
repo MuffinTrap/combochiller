@@ -79,7 +79,8 @@ static std::string names[] = {
     "RaccoonViolet",
     "Mrs Beanbag",
     "Aldroid",
-    " ToBach "}; // Otherwise last fruit shows under h
+    "ToBach",
+    " "}; // Otherwise last fruit shows under h
 
 static std::string party[] = {
     "I hope you all",
@@ -109,7 +110,7 @@ static std::vector<Timer> parts =
     // These are all together in a 46.second part
 
     Timer(sceners, 2, 2, 8.0f, iNoFace, 0, 0, 4.0f),
-    Timer(names, 6, 6, 15.0f, iNoFace, 0, 0, 6.0f),
+    Timer(names, 7, 7, 15.0f, iNoFace, 0, 0, 6.0f),
     Timer(party, 2, 2,  10.0f, iHeart, 0.7f, fullRotation, 6.0f),
 
     // Over the end
@@ -161,6 +162,7 @@ void PartsSetup(Vector2 faceDimensions, float faceScale, Vector2 facePosition)
     nms.AddLineEffect(LineEffect(3, LineFX_FRUITS, 13)); // BeanBag - yellow and blue
     nms.AddLineEffect(LineEffect(4, LineFX_FRUITS, 12)); // Aldroid - green
     nms.AddLineEffect(LineEffect(5, LineFX_FRUITS, 11)); // ToBach - orange
+    nms.AddLineEffect(LineEffect(6, LineFX_FRUITS, 11)); // ToBach - orange
 
     // Face position targets
     GetPart(partIntro).facePositionTarget = faceposition;

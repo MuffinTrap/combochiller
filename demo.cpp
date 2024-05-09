@@ -156,8 +156,16 @@ void Template::Init()
     particleEffect.Init();
     particleEffect.aliveTime = GetPart(partHiya).duration/2.0f;
 
-    fruitPlasma.Init((std::floor(gdl::ScreenXres/4)-40)/2, (gdl::ScreenYres-40)/2);
+    float plasmaScale = 2.0f;
+    short plasmaW = (std::floor(gdl::ScreenXres/4)-40)/plasmaScale;
+    short plasmaH = (gdl::ScreenYres-40)/plasmaScale;
+    fruitPlasma.Init(plasmaW, plasmaH);
     fruitPlasma.speed = 1.4f;
+    // Difference to current position
+    // Imitate nintendo Switch snap???
+    fruitPlasma.y = -plasmaH * 1.5f;
+    fruitPlasma.targetY = 20;
+    fruitPlasma.moveSpeed = 2.0f;
 
     vaporwave.PlayMusic(false);
 }
@@ -197,6 +205,19 @@ void Template::Update()
 
     Timer &part = GetPart(partIndex);
     part.Update(deltaTime);
+
+    // Move the plasma away when fruits part
+    // is at end
+    if (part.effect == FXfruits)
+    {
+        // If halfway to end delay.
+        if (part.duration - part.elapsed < part.endDelay/2)
+        {
+            fruitPlasma.targetY = gdl::ScreenYres + 20;
+        }
+    }
+
+
     if (part.GetProgress() >= 1.0f)
     {
         if ((u_int)(partIndex + 1) >= parts.size())
@@ -303,8 +324,12 @@ void Template::Draw()
 
         case FXfruits:
         case FXplasma: 
-            fruitPlasma.Draw(20,20, false);
-            fruitPlasma.Draw(gdl::ScreenCenterX+gdl::ScreenXres/4+20, 20, true);
+        {
+            short leftx = 20;
+            short flipX = gdl::ScreenXres-20;
+            fruitPlasma.Draw(leftx, false);
+            fruitPlasma.Draw(flipX, true);
+        }
         break;
 
         case FXbirds:

@@ -19,6 +19,7 @@ Timer::Timer(std::string* greets, int amount, int showAmount, float duration, co
     this->faceIndex = faceIndex;
     this->rotationDuration = rotationDuration;
     this->rotationSpeed = rotationSpeed;
+    this->endDelay = endDelay;
 
     // Calculate
     int totalLetters = 0;
